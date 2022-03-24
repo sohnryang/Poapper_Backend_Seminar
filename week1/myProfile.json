@@ -1,0 +1,11 @@
+{
+  "name": "ryangsohn",
+  "job": "student",
+  "age": 20,
+  "hobby": ["coding", "browsing HN"],
+  "course_table": [
+    { "name": "Calculus 1", "id": "MATH101" },
+    { "name": "General Physics 1", "id": "PHYS101" },
+    { "name": "General Chemistry 1", "id": "CHEM101" }
+  ]
+}
