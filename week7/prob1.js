@@ -17,7 +17,6 @@ app.use(express.urlencoded());
 app.use(cookieParser("Hell world!"));
 
 const cookieConfig = { httpOnly: true, maxAge: 10002, signed: true };
-const _username = "poapper", _password = "1986";
 
 app.get("/food", (_, res) => {
   conn.query("SELECT * FROM foods", (err, results) => {
@@ -41,8 +40,8 @@ app.get("/food/:foodId", (req, res) => {
 });
 
 app.post("/food", (req, res) => {
-  const { username, password } = req.signedCookies;
-  if (username != _username || password != _password) {
+  const { userId } = req.signedCookies;
+  if (!userId) {
     res.sendStatus(401);
     res.end();
     return;
@@ -59,8 +58,8 @@ app.post("/food", (req, res) => {
 });
 
 app.put("/food/:foodId", (req, res) => {
-  const { username, password } = req.signedCookies;
-  if (username != _username || password != _password) {
+  const { userId } = req.signedCookies;
+  if (!userId) {
     res.sendStatus(401);
     res.end();
     return;
@@ -78,8 +77,8 @@ app.put("/food/:foodId", (req, res) => {
 });
 
 app.delete("/food/:foodId", (req, res) => {
-  const { username, password } = req.signedCookies;
-  if (username != _username || password != _password) {
+  const { userId } = req.signedCookies;
+  if (!userId) {
     res.sendStatus(401);
     res.end();
     return;
