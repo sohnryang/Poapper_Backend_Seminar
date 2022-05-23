@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql");
 const cookieParser = require("cookie-parser");
+const argon2 = require("argon2");
 
 const conn = mysql.createConnection({
   host: "localhost",
@@ -89,14 +90,58 @@ app.delete("/food/:foodId", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username == _username && password == _password) {
-    res.cookie("username", username, cookieConfig);
-    res.cookie("password", password, cookieConfig);
-  } else {
+  const { id, password } = req.body;
+  conn.query(`SELECT * FROM user WHERE login_id LIKE ${conn.escape(id)}`, async (err, results) => {
+    if (err || !(await argon2.verify(results[0].login_pw, password))) {
+      res.sendStatus(401);
+      res.end();
+      return;
+    }
+    let userId = results[0].id;
+    res.cookie("userId", userId, cookieConfig);
+    res.redirect(301, "/");
+  });
+});
+
+app.get("/", (_, res) => {
+  res.sendFile(__dirname + "/view/index.html");
+});
+
+app.get("/secret", (req, res) => {
+  const userId = req.signedCookies.userId;
+  if (!userId) {
     res.sendStatus(401);
+    res.end();
+    return;
   }
-  res.end();
+  res.sendFile(__dirname + "/view/secret_file.html");
+})
+
+app.post("/signup", (req, res) => {
+  const { id, password } = req.body;
+  argon2.hash(password).then((data) => {
+    conn.query(
+      `INSERT INTO user (login_id, login_pw) VALUES ` +
+      `(${conn.escape(id)}, ${conn.escape(data)})`,
+      (err, _) => {
+        if (err) throw err;
+        res.end();
+      },
+    );
+  })
+});
+
+app.post("/removeuser", (req, res) => {
+  const { userId } = req.signedCookies;
+  if (!userId) {
+    res.sendStatus(401);
+    res.end();
+    return;
+  }
+  conn.query(`DELETE FROM user WHERE id=${conn.escape(userId)}`, () => {
+    res.clearCookie("userId");
+    res.redirect(301, "/");
+  });
 });
 
 const port = process.env.PORT || 8080;
